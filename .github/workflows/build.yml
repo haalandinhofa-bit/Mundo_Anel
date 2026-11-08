@@ -33,14 +33,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mundo-anel-fabric-1.21.4
-          path: build/libs/mundo-anel-1.0.0.jar
+          path: build/libs/mundo-anel-1.1.0.jar
           if-no-files-found: error
           retention-days: 30
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: Mundo Anel 1.0.0
-          files: build/libs/mundo-anel-1.0.0.jar
+          tag_name: v1.1.0
+          name: Mundo Anel 1.1.0
+          files: build/libs/mundo-anel-1.1.0.jar
           make_latest: true

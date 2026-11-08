@@ -46,6 +46,14 @@ final class AnelWorldGenerator {
             return;
         }
 
+        // Skip square-corner chunks that cannot touch the circular region at all.
+        int nearestX = startX > 0 ? startX : (startX + 15 < 0 ? startX + 15 : 0);
+        int nearestZ = startZ > 0 ? startZ : (startZ + 15 < 0 ? startZ + 15 : 0);
+        if ((long) nearestX * nearestX + (long) nearestZ * nearestZ
+                > (long) MAX_REGION_RADIUS * MAX_REGION_RADIUS) {
+            return;
+        }
+
         int seaLevel = world.getSeaLevel();
         BlockPos.Mutable pos = new BlockPos.Mutable();
         boolean changed = false;
@@ -59,7 +67,7 @@ final class AnelWorldGenerator {
                 switch (sample.region()) {
                     case CENTER_ISLAND -> {
                         setLandColumn(world, chunk, pos, x, z, sample.surfaceY(),
-                                Blocks.STONE.getDefaultState(), Blocks.STONE.getDefaultState());
+                                Blocks.GRASS_BLOCK.getDefaultState(), Blocks.DIRT.getDefaultState());
                         changed = true;
                     }
                     case LAND -> {
@@ -193,7 +201,7 @@ final class AnelWorldGenerator {
     private static void setLandColumn(ServerWorld world, WorldChunk chunk, BlockPos.Mutable pos,
                                       int x, int z, int surfaceY, BlockState top, BlockState filler) {
         int minY = world.getBottomY();
-        int currentTop = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z) - 1;
+        int currentTop = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE, x & 15, z & 15) - 1;
 
         for (int y = currentTop; y > surfaceY; y--) {
             set(chunk, pos, x, y, z, Blocks.AIR.getDefaultState());
@@ -325,10 +333,19 @@ final class AnelWorldGenerator {
                 registry.getEntry(BiomeKeys.PLAINS.getValue()).orElseThrow()
         );
 
-        int bottomSectionY = chunk.getBottomY() >> 4;
+        // Biome choice depends on X/Z only, so calculate the 4x4 quart grid once
+        // instead of repeating the expensive trigonometry for every vertical quart.
+        MapSample[][] samples = new MapSample[4][4];
+        for (int quartX = 0; quartX < 4; quartX++) {
+            for (int quartZ = 0; quartZ < 4; quartZ++) {
+                int x = chunk.getPos().getStartX() + quartX * 4 + 2;
+                int z = chunk.getPos().getStartZ() + quartZ * 4 + 2;
+                samples[quartX][quartZ] = sampleAt(x, z, world.getSeaLevel());
+            }
+        }
+
         ChunkSection[] sections = chunk.getSectionArray();
-        for (int sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
-            ChunkSection section = sections[sectionIndex];
+        for (ChunkSection section : sections) {
             if (section == null) {
                 continue;
             }
@@ -340,11 +357,7 @@ final class AnelWorldGenerator {
             for (int quartY = 0; quartY < 4; quartY++) {
                 for (int quartX = 0; quartX < 4; quartX++) {
                     for (int quartZ = 0; quartZ < 4; quartZ++) {
-                        int x = chunk.getPos().getStartX() + quartX * 4 + 2;
-                        int z = chunk.getPos().getStartZ() + quartZ * 4 + 2;
-                        int y = ((bottomSectionY + sectionIndex) << 4) + quartY * 4 + 2;
-                        MapSample sample = sampleAt(x, z, world.getSeaLevel());
-                        RegistryEntry<Biome> biome = biomeFor(sample, palette);
+                        RegistryEntry<Biome> biome = biomeFor(samples[quartX][quartZ], palette);
                         if (biome != null) {
                             container.set(quartX, quartY, quartZ, biome);
                         }
