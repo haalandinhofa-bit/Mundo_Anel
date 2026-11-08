@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "mundo_anel",
+  "version": "${version}",
+  "name": "Mundo Anel",
+  "description": "Gera uma grande ilha em formato de anel, seis biomas, uma lagoa central e um rio sinuoso no Overworld.",
+  "authors": ["GanhamosGames"],
+  "contact": {
+    "sources": "https://github.com/haalandinhofa-bit/Mundo_Anel"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.ganhamosgames.mundoanel.MundoAnelMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": ">=0.119.2"
+  }
+}
