@@ -312,17 +312,17 @@ final class AnelWorldGenerator {
     }
 
     private static void paintBiomes(ServerWorld world, WorldChunk chunk) {
-        Registry<Biome> registry = world.getRegistryManager().get(RegistryKeys.BIOME);
+        Registry<Biome> registry = world.getRegistryManager().getOrThrow(RegistryKeys.BIOME);
         BiomePalette palette = new BiomePalette(
-                registry.getEntry(BiomeKeys.SNOWY_PLAINS).orElseThrow(),
-                registry.getEntry(BiomeKeys.TAIGA).orElseThrow(),
-                registry.getEntry(BiomeKeys.FOREST).orElseThrow(),
-                registry.getEntry(BiomeKeys.SAVANNA).orElseThrow(),
-                registry.getEntry(BiomeKeys.BADLANDS).orElseThrow(),
-                registry.getEntry(BiomeKeys.DESERT).orElseThrow(),
-                registry.getEntry(BiomeKeys.OCEAN).orElseThrow(),
-                registry.getEntry(BiomeKeys.RIVER).orElseThrow(),
-                registry.getEntry(BiomeKeys.PLAINS).orElseThrow()
+                registry.getEntry(BiomeKeys.SNOWY_PLAINS.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.TAIGA.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.FOREST.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.SAVANNA.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.BADLANDS.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.DESERT.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.OCEAN.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.RIVER.getValue()).orElseThrow(),
+                registry.getEntry(BiomeKeys.PLAINS.getValue()).orElseThrow()
         );
 
         int bottomSectionY = chunk.getBottomY() >> 4;
