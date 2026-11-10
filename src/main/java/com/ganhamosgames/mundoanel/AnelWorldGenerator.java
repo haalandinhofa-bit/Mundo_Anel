@@ -201,7 +201,7 @@ final class AnelWorldGenerator {
     private static void setLandColumn(ServerWorld world, WorldChunk chunk, BlockPos.Mutable pos,
                                       int x, int z, int surfaceY, BlockState top, BlockState filler) {
         int minY = world.getBottomY();
-        int currentTop = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE, x & 15, z & 15) - 1;
+        int currentTop = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE, x & 15, z & 15);
 
         for (int y = currentTop; y > surfaceY; y--) {
             set(chunk, pos, x, y, z, Blocks.AIR.getDefaultState());
@@ -223,7 +223,9 @@ final class AnelWorldGenerator {
     private static void setWaterColumn(ServerWorld world, WorldChunk chunk, BlockPos.Mutable pos,
                                        int x, int z, int seaLevel, boolean river) {
         int minY = world.getBottomY();
-        int currentTop = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z) - 1;
+        // Read the chunk being generated, never world.getTopY(): that call waits for this very
+        // chunk to finish and freezes the server at 100% while the world is created.
+        int currentTop = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE, x & 15, z & 15);
         int depth = 5 + Math.floorMod(x * 31 + z * 17, 4);
         int bedY = Math.max(minY + 8, seaLevel - depth);
 
