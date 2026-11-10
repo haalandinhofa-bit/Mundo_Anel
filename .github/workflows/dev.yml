@@ -1,0 +1,55 @@
+name: Dev build
+on:
+  push:
+    branches: [dev]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.12"
+      - name: Build
+        continue-on-error: true
+        run: gradle clean build --no-daemon > build.log 2>&1
+      - name: Inspect Minecraft API
+        if: always()
+        run: |
+          mkdir -p out
+          for jar in $(find "$HOME" "$GITHUB_WORKSPACE" -path '*minecraftMaven*' -name '*.jar' ! -name '*sources*' 2>/dev/null); do
+            if unzip -l "$jar" | grep -q 'net/minecraft/world/gen/chunk/ChunkGenerator.class'; then
+              echo "JAR $jar" > out/inspect.txt
+              javap -p -cp "$jar" \
+                net.minecraft.world.gen.chunk.ChunkGenerator \
+                net.minecraft.world.gen.chunk.FlatChunkGenerator \
+                net.minecraft.world.biome.source.BiomeSource \
+                net.minecraft.world.biome.source.FixedBiomeSource \
+                net.minecraft.world.gen.chunk.VerticalBlockSample \
+                net.minecraft.world.chunk.Chunk \
+                net.minecraft.world.chunk.ProtoChunk \
+                net.minecraft.world.biome.Biome \
+                net.minecraft.world.biome.source.util.MultiNoiseUtil\$MultiNoiseSampler \
+                net.minecraft.registry.Registries >> out/inspect.txt 2>&1 || true
+              break
+            fi
+          done
+      - name: Publish outputs
+        if: always()
+        run: |
+          cp build.log out/ || true
+          cp build/libs/mundo-anel-[0-9]*.jar out/ 2>/dev/null || true
+          rm -f out/*-sources.jar
+          cd out
+          git init -q
+          git checkout -q -b ci-out
+          git config user.name "ci"; git config user.email "ci@example.com"
+          git add -A
+          git commit -qm "ci output for $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" ci-out
